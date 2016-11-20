@@ -5,14 +5,15 @@
 library(tm)
 library(RWeka)
 library("RSQLite")
+library(RcolorBrewer)
 mystopwords<-scan("f:/r/data/stopwords.txt", what="character", sep=",")
-con <- dbConnect(drv=RSQLite::SQLite(), dbname="f:/python27/dbase/li_q2_2016.db")
+
 full_dict<-read.csv("f:/r/data/full_li_list.txt", stringsAsFactors = FALSE)
 colnames(full_dict)<-c("pattern","replacement")
 nfulldict<-nrow(full_dict)
 #keep the tables required
+con <- dbConnect(drv=RSQLite::SQLite(), dbname="f:/python27/dbase/li_q2_2016.db")
 intable <- tables[tables = "banks"]
-
 query="select story_id,fulltext from banks"
 rs=dbSendQuery(con,query)
 mydf=fetch(rs,n=-1)
@@ -20,7 +21,7 @@ dbDisconnect(con)
 myReader <- readTabular(mapping=list( id="story_id",content="fulltext"))
 mycorpus<- VCorpus(DataframeSource(mydf), readerControl=list(reader=myReader))
 
-summary(mycorpus) 
+#summary(mycorpus) 
 comp_list<-c("iprulife","sbilife","bajajli","hdfclife","reliancelife")
 full_list<-c("iprulife","sbilife","bajajli","hdfclife","reliancelife","aegonli","avivali","birlali","canarahsbcli",
 	"dhflli","edelweissli","exideli","futuregenerali","idbifedli","indiafirstli","kotakli","maxlife","pnbmetlife","saharali",
@@ -31,7 +32,7 @@ ncorpus=length(mycorpus)
 mycorpus <- tm_map(mycorpus, removePunctuation)
 mycorpus<-tm_map(mycorpus, content_transformer(removeWords), c(stopwords("SMART"),mystopwords))
 mycorpus<-tm_map(mycorpus, content_transformer(tolower))
-#mycorpus<- tm_map(mycorpus, stripWhitespace)
+mycorpus<- tm_map(mycorpus, stripWhitespace)
 for (i in 1:nfulldict) {
     mycorpus<-tm_map(mycorpus,content_transformer(function(x, pattern) {return (gsub(pattern, full_dict[i,2], x))}),full_dict[i,1])
   }
@@ -65,8 +66,9 @@ df[df==0]<-NA
 #this one works
 library(ggplot2)
 #jpeg("f:/r/data/ipru1.jpg", width = 11, height = 6, units = 'in', res = 300)
-g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = 0.90*value), colour = "green") + theme_bw() + xlab("") + ylab("")
-g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value)) + theme(legend.position="none") +scale_fill_brewer(palette="Set1")
+#g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = 0.90*value), colour = "green") + theme_bw() + xlab("") + ylab("")
+g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = 0.90*value),colour="green") + theme_bw() + xlab("") + ylab("") 
+g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value)) + theme(legend.position="none") + scale_fill_brewer(palette="Set1")
 dev.off() # working perfect
 
 #readline(prompt="Press [enter] to continue")
@@ -403,21 +405,17 @@ title("Ego map, industry", cex.main=0.9)
 #===============================Page 8 Top 20 terms associated with each entity
 #for each entity loop
 entity<-"bajajli"
-dtm.a<-dtm[,intersect(colnames(dtm),entity)]
-dtm.mat<-as.matrix(dtm.a)
-dtm.mat.b<-dtm.mat[rowSums(dtm.mat)!=0,]
-ids.a<-as.numeric(rownames(dtm.mat.b)) #all the row (doc ids) which have the entity listed
-#with these doc ids, subset the main dtm, using rows=ids, and cols = entity + unique terms in the  key terms
-#keyterms<-as.vector(unlist(unname(ldaOut.terms[,,drop=TRUE])))
-col.list<-c(keyterms, entity) # now we have selected columns and selected rows; lets create a dtm
-dtm.b<-dtm[intersect(rownames(dtm),ids.a),intersect(colnames(dtm),col.list)]
-term.freq <- sort(colSums(as.matrix(dtm.b)),decreasing=TRUE)
+col.list<-c(keyterms, entity)
+dtm.80<-dtm[,intersect(colnames(dtm),col.list)]
+keep.rows<-which(as.matrix(dtm.80[,entity])!=0)
+dtm.81<-dtm.80[keep.rows,]# now has documenst which contain entity and full set of key terms
+term.freq <- sort(colSums(as.matrix(dtm.81)),decreasing=TRUE)
 term.freq<-head(term.freq,20)
 #now again subset the dtm.b
-dtm.mat.c<- dtm.b[,intersect(colnames(dtm.b),names(term.freq))] 
+dtm.82<- dtm.81[,intersect(colnames(dtm.81),names(term.freq))] 
 
-#reverting to SNA graph 11112016
-tdm.c<-as.matrix(t(dtm.c))
+#SNA graph 20112016
+tdm.c<-as.matrix(t(dtm.82))
 tdm.c[tdm.c>=1] <- 1
 termMatrix <- tdm.c %*% t(tdm.c)
 g <- graph.adjacency(termMatrix, weighted=T, mode = "undirected")
@@ -425,7 +423,7 @@ g <- graph.adjacency(termMatrix, weighted=T, mode = "undirected")
 g <- simplify(g)
 # set labels and degrees of vertices
 V(g)$label <- V(g)$name
-V(g)$degree <- degree(g)
+V(g)$degree <- degree(g,mode="in")
 
 #Plot the Graph
 # set seed to make the layout reproducible
@@ -433,15 +431,18 @@ set.seed(3952)
 layout1 <- layout.fruchterman.reingold(g)
 plot(g, layout=layout1)
 V(g)$label.cex <- 1.0 * V(g)$degree / max(V(g)$degree)+ .2
-V(g)$label.color <- "black"
+V(g)$label.color <- ifelse(V(g)$name==entity,"blue3","black")
 V(g)$frame.color <- NA
-V(g)$size=degree(g)*0.02 
+V(g)$size=degree(g)*0.5 
+V(g)$color<-ifelse(V(g)$name==entity,"skyblue","whitesmoke")
 egam <- (log(E(g)$weight)+.4) / max(log(E(g)$weight)+.4)
-E(g)$color <- "gray80"
 E(g)$width <- egam*0.8
+cut.off <- mean(E(g)$weight)
+g.sp <- delete_edges(g, E(g)[weight<cut.off])
+E(g)$color <- "gray80"
 # plot the graph in layout1
-plot(g, layout=layout1)
-#plot(g, layout=layout.kamada.kawai)
+plot(g.sp, layout=layout1)
+
 
 
 
