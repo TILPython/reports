@@ -30,8 +30,8 @@ TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 1, max = 2)
 
 ncorpus=length(mycorpus)
 mycorpus <- tm_map(mycorpus, removePunctuation)
-mycorpus<-tm_map(mycorpus, content_transformer(removeWords), c(stopwords("SMART"),mystopwords))
 mycorpus<-tm_map(mycorpus, content_transformer(tolower))
+mycorpus<-tm_map(mycorpus, content_transformer(removeWords), c(stopwords("SMART"),mystopwords))
 mycorpus<- tm_map(mycorpus, stripWhitespace)
 for (i in 1:nfulldict) {
     mycorpus<-tm_map(mycorpus,content_transformer(function(x, pattern) {return (gsub(pattern, full_dict[i,2], x))}),full_dict[i,1])
@@ -66,9 +66,10 @@ df[df==0]<-NA
 #this one works
 library(ggplot2)
 #jpeg("f:/r/data/ipru1.jpg", width = 11, height = 6, units = 'in', res = 300)
-#g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = 0.90*value), colour = "green") + theme_bw() + xlab("") + ylab("")
-g <- ggplot(df, aes(Var1, Var2)) + geom_point(aes(size = 0.90*value),colour="green") + theme_bw() + xlab("") + ylab("") 
-g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value)) + theme(legend.position="none") + scale_fill_brewer(palette="Set1")
+
+g <- ggplot(df, aes(Var1, Var2, colour=Var1)) + geom_point(aes(size = 0.90*value)) + theme_bw() + xlab("") + ylab("") 
+g + scale_size_continuous(range=c(10,30)) + geom_text(aes(label = value), color="black") + theme(legend.position="none") + scale_colour_brewer(palette="Set2")
+
 dev.off() # working perfect
 
 #readline(prompt="Press [enter] to continue")
@@ -112,6 +113,8 @@ dev.off()
 #=======================================page 3 procesing Authored articles
 
 #=============================Page 4 Top ten newspapers with max stories, fixed 28102016
+oldpar<-par()
+par(mai=c(0.50,2,1,0.50))
 con <- dbConnect(drv=RSQLite::SQLite(), dbname="f:/python27/dbase/li_q2_2016.db")
 library(RColorBrewer)
 #keep the tables required
@@ -123,10 +126,13 @@ dbDisconnect(con)
 mydf<-mydf[order(mydf$frequency),]
 mydf<-tail(mydf,10)
 freq<- as.numeric(as.character(mydf$frequency))
-bp<-barplot(mydf$frequency,main="Top 10 newspapers with max. stories", col=brewer.pal(length(mydf$frequency),"Paired"),horiz=TRUE,names.arg=mydf$Publication,las=2, axes='F', xlim=c(0,max(freq)*1.1))
+bp<-barplot(mydf$frequency,main="Top 10 newspapers with max. stories", col=brewer.pal(length(mydf$frequency),"Set3"),horiz=TRUE,names.arg=mydf$Publication,las=2, axes='F', xlim=c(0,max(freq)*1.1))
 text(x=freq+0.03, y=bp, label=as.character(freq), pos=4,font=2)
 # colour options are Paired, Accent, Pastel1, Pastel2, Pastel3, Set1, Set2, Set3 and Dark2
+par()<-oldpar
 #5. Journalists with max stories==fixed 28102016
+oldpar<-par()
+par(mai=c(0.50,2,1,0.50))
 con <- dbConnect(drv=RSQLite::SQLite(), dbname="f:/python27/dbase/li_q2_2016.db")
 query="select Journalist, count(*) as frequency from banks where ((Journalist is not NULL) and (Journalist!=' ')) group by Journalist order by count(*) desc"
 rs=dbSendQuery(con,query)
@@ -135,10 +141,8 @@ dbDisconnect(con)
 mydf<-mydf[order(mydf$frequency),]
 mydf<-tail(mydf,10)
 freq<- as.numeric(as.character(mydf$frequency))
-oldpar<-par()
-par(mai=c(0.50,2,1,0.50))
 
-bp<-barplot(mydf$frequency,main="Top 10 journalists with max. stories", col=brewer.pal(length(mydf$frequency),"Paired"),horiz=TRUE,names.arg=mydf$Journalist,las=2, axes='F', xlim=c(0,max(freq)*1.1))
+bp<-barplot(mydf$frequency,main="Top 10 journalists with max. stories", col=brewer.pal(length(mydf$frequency),"Set3"),horiz=TRUE,names.arg=mydf$Journalist,las=2, axes='F', xlim=c(0,max(freq)*1.1))
 text(x=freq+0.05, y=bp, label=as.character(freq), pos=4,font=2)
 #revert to old parameters
 par()<-oldpar
@@ -146,9 +150,8 @@ par()<-oldpar
   
 #================================Page 6 Top 10 key topics in media
 library(topicmodels)
-item<-"iprulife" # loop for each item
-nx<- as.vector(dtm[,item]>0) #identify rows for whicj item>0, exists
-dtm_item<-dtm[nx,] #subset the dtm on identified ids, now you have item-specific dtm
+nx<- as.vector(dtm[,comp_list]>0) #identify rows for whicj item>0, exists
+dtm_item<-dtm[nx,] #subset the dtm on identified ids, now you have industry-specific dtm
 #Set parameters for Gibbs sampling
 burnin <- 2000
 iter <- 1000
@@ -167,7 +170,7 @@ ldaOut.topics <- as.matrix(topics(ldaOut))
  #ALL THE TOPIC FOR THE ENTIRE INDUSTRY
 #top 10 terms in each topic, either output directly to slide or make document map
 ldaOut.terms <- as.data.frame(terms(ldaOut,10))
-
+keyterms<-as.vector(unlist(unname(ldaOut.terms[,,drop=TRUE])))
 
 #======================================Page 7 Ego map, industry
 # subset dtm for excl stories of company and each of its competitors
@@ -404,7 +407,12 @@ title("Ego map, industry", cex.main=0.9)
 
 #===============================Page 8 Top 20 terms associated with each entity
 #for each entity loop
-entity<-"bajajli"
+library(igraph)
+oldpar<-par()
+par(mfrow=(c(3,2)))
+for (entity in comp_list)
+{
+	file.out<-paste(entity,"jpg",sep=".")
 col.list<-c(keyterms, entity)
 dtm.80<-dtm[,intersect(colnames(dtm),col.list)]
 keep.rows<-which(as.matrix(dtm.80[,entity])!=0)
@@ -441,9 +449,12 @@ cut.off <- mean(E(g)$weight)
 g.sp <- delete_edges(g, E(g)[weight<cut.off])
 E(g)$color <- "gray80"
 # plot the graph in layout1
+jpeg(file.out, width = 5.5, height = 5.5, unit="in", res=300)
 plot(g.sp, layout=layout1)
+dev.off()
+}
 
-
+par(oldpar)
 
 
 
