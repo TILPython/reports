@@ -1,0 +1,15 @@
+
+
+"icici prudential life insurance company", "iprulife"
+"icici prudential life insurance", "iprulife"
+"bajaj allianz life insurance company", "bajajli"
+"bajaj allianz life insurance", "bajajli"
+"sbi life insurance company limited", "sbilife"
+"sbi life insurance company", "sbilife"
+"sbi life insurance", "sbilife"
+"hdfc life insurance company", "hdfclife"
+"hdfc life insurance", "hdfclife"
+"hdfc life", "hdfclife"
+"reliance life insurance company", "relianceli"
+"reliance life insurance", "relianceli"
+"reliance life", "relianceli"

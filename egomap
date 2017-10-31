@@ -1,0 +1,134 @@
+#ego map project
+#starting with dtm, to remove sparse terms? to be done
+#select documents with at least one of the competition listed
+
+dtm.a<-dtm[,intersect(colnames(dtm),comp_list)]
+dtm.mat<-as.matrix(dtm.a)
+dtm.mat.b<-dtm.mat[rowSums(dtm.mat)!=0,]
+ids.a<-as.numeric(rownames(dtm.mat.b)) #all the tow (doc ids) which have the competition listed
+#with these doc ids, subset the main dtm, using rows=ids, and cols + lilist + unique terms in the  key terms
+keyterms<-as.vector(unlist(unname(ldaOut.terms[,,drop=TRUE])))
+col.list<-c(keyterms, comp_list) # now we have selected columns and selected rows; lets create a dtm
+dtm.b<-dtm[intersect(rownames(dtm),ids.a),intersect(colnames(dtm),col.list)]
+diag_mat<-as.matrix(t(dtm.b))
+# within key terms, get most frequent terms associated with entity
+which_mfw<-comp_list
+# ==================================================================
+# Network between top characters
+# ==================================================================
+# In order to get a network between top characters, we first need to
+# obtain an adjacency matrix based on the most frequent terms
+# (we'll use this matrix to make the graph for the arc-diagram)
+# Although we can get an adjacency matrix in several ways, I'm using
+# two slightly different approaches (they provide the same graph)
+# The difference in the two approaches are in the nodes weights
+# which we'll use for plotting the arcs in the arc-diagram
+
+# Option 1
+library(arcdiagram)
+# matrix with most frequent terms
+mft_mat = diag_mat[,which_mfw]
+# first adjacency matrix
+adj_mat1 = diag_mat %*% t(diag_mat)
+# set zeros in diagonal
+diag(adj_mat1) = 0
+# create graph from adjacency matrix
+graph_chars1 = graph.adjacency(adj_mat1, mode="undirected", weighted=TRUE, diag=FALSE)
+# get edgelist 1
+edges1 = get.edgelist(graph_chars1)
+
+# Option 2
+# transform mft_mat to a binary (ie boolean) matrix
+bin_mat = mft_mat
+bin_mat[mft_mat != 0] = 1
+# second adjacency matrix using binary distances
+adj_mat2 = dist(bin_mat, method="binary", diag=TRUE, upper=TRUE)
+adj_mat2 = 1 - as.matrix(adj_mat2)
+# set zeros in the diagonal
+diag(adj_mat2) = 0
+# create graph from adjacency matrix
+graph_chars2 = graph.adjacency(adj_mat2, mode="undirected", weighted=TRUE, diag=FALSE)
+# get edgelist 2
+edges2 = get.edgelist(graph_chars2)
+
+# the difference between the two graphs is in the weights
+a = E(graph_chars1)$weight
+b = E(graph_chars2)$weight
+summary(a); summary(b)
+
+# save network in file "top_chars_network.txt"
+write.table(edges1, "top_chars_network.txt")
+write.table(E(graph_chars1)$weight, "weight_edges_graph1.txt")
+write.table(E(graph_chars2)$weight, "weight_edges_graph2.txt")
+
+# ==================================================================
+# Preliminary arc-diagram plots
+# ==================================================================
+
+# let's take a first look to the arc-diagram network
+# using the arcDiagram function
+
+# arc-diagram using default parameters (not very interesting)
+arcDiagram(edges1, cex=0.8, mar=c(7,1,4,1))
+title("Preliminary arc-diagram", cex.main=0.9)
+
+
+# ==================================================================
+# Arc widths based on graph_chars
+# ==================================================================
+
+# let's try to improve the arc-diagram tweaking some parameters
+# ARC WIDTHS BASED ON GRAPH_CHARS1
+w1 = E(graph_chars1)$weight
+lwds = sqrt(w1/1)
+# arc colors based on graph-chars2
+w2 = E(graph_chars2)$weight
+cols = hsv(h=0, s=w2/max(w2), v=0, alpha=0.5*w2/max(w2))
+
+# The width of the arcs connecting two characters reflect the number 
+# of words in common. In turn, the color of the arcs reflect the 
+# association between two characters depending on the similarity 
+# of the words in their dialogues.
+# arc-diagram
+arcDiagram(edges1, lwd=lwds, col=cols, cex=0.8, mar=c(7,1,4,1))
+title("Preliminary arc-diagram", cex.main=0.9)
+
+
+# ==================================================================
+# Arc-diagram with pie charts
+# ==================================================================
+
+# now let's add some pie-charts in each node to reflect the
+# dialogues participation proportion of each character by episode
+
+# arc-diagram with pie charts on nodes
+# color bands (of episodes VI, V, IV)
+#col.pies = c("#C7F464", "#4ECDC4", "#556270")
+col.pies = c("#C7F464", "#4ECDC4", "#6d849c")
+
+# arc-diagram with pie charts
+arcPies(edges1, top_chars_by_eps, cex=1, col.pies=col.pies, 
+         lwd=lwds, col=cols, mar=c(7,1,4,1))
+title("Arc-diagram with pie charts", cex.main=0.9)
+legend(x=0.9, y=0.5, title="Episodes", text.col="gray65", cex=0.8,
+       legend=c("IV","V","VI"), pch=19, col=col.pies, bty="n")
+
+
+# ==================================================================
+# Arc-diagram with bands
+# ==================================================================
+
+# We can add more visual effects by making the size of the nodes
+# proportional to the importance of each character. In addition, 
+# we can substitute the pie-charts for band-charts
+
+# arc-diagram with bands on nodes
+# color bands (of episodes VI, V, IV)
+#col.bands = c("#C7F464", "#4ECDC4", "#556270")
+col.bands = c("#C7F464", "#4ECDC4", "#6d849c")
+# arc-diagram with bands
+arcBands(edges1, top_chars_by_eps, col.bands=col.bands, 
+         lwd=lwds, col=cols, mar=c(4,1,4,1))
+title("Arc-diagram with bands", cex.main=0.9)
+legend(x=0.9, y=0.5, title="Episodes", text.col="gray65", cex=0.8,
+       legend=c("IV","V","VI"), pch=19, col=col.bands, bty="n")

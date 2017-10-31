@@ -1,0 +1,33 @@
+@graph designs
+1. https://www.google.com/imgres?imgurl=http%3A%2F%2Fi.stack.imgur.com%2FhQyeh.png&imgrefurl=http%3A%2F%2Fstackoverflow.com%2Fquestions%2F24738172%2Fbubble-chart-with-bubbles-aligned-along-their-bottom-edges&docid=GYztvxHXNsbSIM&tbnid=gJBT4yLpOffJbM%3A&w=895&h=626&bih=623&biw=1366&ved=0ahUKEwjowqGZ_NnNAhULpI8KHcZ2CucQMwhGKBowGg&iact=mrc&uact=8
+2. https://www.google.com/imgres?imgurl=https%3A%2F%2Fsites.google.com%2Fsite%2Fe90e50fx%2F_%2Frsrc%2F1382113177103%2Fhome%2Fmatrix-bubble-chart-with-excel%2Fball_matrix_chart.png%3Fheight%3D319%26width%3D400&imgrefurl=https%3A%2F%2Fsites.google.com%2Fsite%2Fe90e50fx%2Fhome%2Fmatrix-bubble-chart-with-excel&docid=gY8TiCQhZQXSIM&tbnid=yXZ23N5A_BOc-M%3A&w=399&h=319&bih=623&biw=1366&ved=0ahUKEwjowqGZ_NnNAhULpI8KHcZ2CucQMwg0KBIwEg&iact=mrc&uact=8
+3. https://www.google.com/imgres?imgurl=http%3A%2F%2Fi.stack.imgur.com%2FYpeqm.png&imgrefurl=http%3A%2F%2Fstackoverflow.com%2Fquestions%2F20673584%2Fvisualizing-crosstab-tables-with-a-plot-in-r&docid=Y1o4KYj_khNAnM&tbnid=OBvJUol-MeRI0M%3A&w=356&h=238&bih=623&biw=1366&ved=0ahUKEwjowqGZ_NnNAhULpI8KHcZ2CucQMwgnKAUwBQ&iact=mrc&uact=8
+
+4. http://rgraphgallery.blogspot.in/2013/04/rg69-circular-bar-plot.html circular bar charts
+5. http://stackoverflow.com/questions/15751442/making-a-circular-barplot-with-a-hollow-center-aka-race-track-plot
+6. http://kateto.net/
+7. http://stackoverflow.com/questions/28499725/change-the-color-of-nodes-in-rcharts-sankey-diagram-in-r
+8. http://rformining.blogspot.com/2014/02/sochi-2014-r-d3js.html
+9. https://www.r-bloggers.com/sankey-diagrams-with-googlevis/
+
+
+https://github.com/gastonstat/StarWars#r-scripts
+R scripts
+
+Parsing scripts: R scripts to parse the movie scripts, extract the characters & dialogues, and produce the data tables:
+
+1. parsing_episodeIV.R
+2. parsing_episodeV.R
+3. parsing_episodeVI.R
+Analysis scripts: R scripts for the performed analysis (run them sequentially):
+
+1. get_top_characters.R
+2. get_top_characters_network.R
+3. get_terms_by_episodes.R
+4. ultimate_arc_diagram.R
+Functions: R functions for plotting different types of arc diagrams (these functions are used in some of the above analysis scripts):
+
+1. arcDiagram.R
+2. arcPies.R
+3. arcBands.R
+4. arcBandBars.R

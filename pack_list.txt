@@ -1,0 +1,28 @@
+1. Title slide
+2. Disclaimer
+3. Table of contents; bottom: abbreviations used herein
+4. The media landscape at a glance: Top 20 themes that dominated the discourse in BFSI
+5. Network map of top 20 media themes
+6. bubble chart of mentions, exclusives and authored==done 12072016.r
+7. Spokespersons in the news (https://www.quora.com/Data-Visualization-What-open-source-package-can-I-use-to-create-a-Topic-Cloud-like-The-Economist)
+8. Newspapers with max stories
+9. Journalists who had the maximum stories--http://www.slideshare.net/rdatamining/text-mining-with-r-an-analysis-of-twitter-data slide 18
+10. Subject entity ego map wrt key themes,Network of associated terms-04082016.r
+11. Subject entity map of themes most driven
+12. Subject entity extract quotes table
+
+THINGS TO PUT IN:
+1. 
+2. Network of associated terms-https://github.com/gastonstat/arcdiagram/blob/master/README.md==04082016.r
+3. Authored articles
+4. Newspapers with max stories
+5. Journalists with max stories
+6. Top 20 key phrases/terms in media
+7. Table of context of top 20 key phrases=keytem_extraction_final.py
+a. http://www.statmethods.net/interface/output.html
+b.https://github.com/cirlabs/citizen-quotes/ extract quotes
+
+
+Ego map project
+1. Get entities by number of mentions
+2. 
